@@ -4,7 +4,7 @@
 
 Once front-end is configured in `/src`, the app will display "Loading" until it detects a web3 instance is running.
 
-To start this, launch a truffle instance...
+## To start this, launch a truffle instance...
 
 `npx truffle init`
 \*\* when prompted with `Overwrite contracts?`, say `Y`
@@ -32,6 +32,18 @@ compilers: {
       version: "0.5.2",
     ...
 ```
+
+## Run ganache-cli to get your local blockchain running
+
+`ganache-cli`
+
+## Migrat your contracts in another terminal to your local blockchain ganache instance
+
+`truffle migrate --reset --compile-all`
+
+## Once contracts deployed to dev network, run your tests:
+
+`truffle test`
 
 ## Getting Started with Create React App
 
