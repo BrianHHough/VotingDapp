@@ -1,5 +1,7 @@
 # Voting Dapp
 
+## GitHub Version
+
 Once front-end is configured in `/src`, the app will display "Loading" until it detects a web3 instance is running.
 
 To start this, launch a truffle instance...
