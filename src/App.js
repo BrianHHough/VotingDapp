@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import Voting from './contracts/Voting.json';
 import './App.css';
 import { getWeb3 } from './utils.js';
-
 function App() {
   const [web3, setWeb3] = useState(undefined);
   const [accounts, setAccounts] = useState(undefined);
-  const [admin, setAdmin] = useState(undefined);
-  const [ ballots, setBallots] = useState([]);
   const [contract, setContract] = useState(undefined);
+  const [admin, setAdmin] = useState(undefined);
+  const [ballots, setBallots] = useState([]);
 
   useEffect(() => {
     const init = async () => {
@@ -16,13 +15,10 @@ function App() {
       const accounts = await web3.eth.getAccounts();
       const networkId = await web3.eth.net.getId();
       const deployedNetwork = Voting.networks[networkId];
-
-
       const contract = new web3.eth.Contract(
         Voting.abi,
         deployedNetwork && deployedNetwork.address,
       );
-
       const admin = await contract.methods
         .admin()
         .call();
@@ -38,13 +34,6 @@ function App() {
     });
   }, []);
 
-  // Takes care of initial loading
-  useEffect(() => {
-    if(isReady()) {
-      updateBallots();
-    }
-  }, [accounts, contract, web3, admin])
-
   const isReady = () => {
     return (
       typeof contract !== 'undefined' 
@@ -54,27 +43,26 @@ function App() {
     );
   }
 
+  useEffect(() => {
+    if(isReady()) {
+      updateBallots();
+    }
+  }, [accounts, contract, web3, admin]);
+
   async function updateBallots() {
     const nextBallotId = parseInt(await contract.methods
       .nextBallotId()
       .call());
-    
-    // Fetch each ballot individually
+
     const ballots = [];
-    for(let i = 0; i < nextBallotId; i++) {
+    for(let i = 0; i < nextBallotId; i++) { 
       const [ballot, hasVoted] = await Promise.all([
         contract.methods.getBallot(i).call(),
-        contract.methods.votes(accounts[0], i).call()
+        contract.methods.votes(accounts[0], i).call() 
       ]);
-      // const ballot = await contract.methods
-      //   .getBallot(i)
-      //   .call();
-      // const hasVoted = await contract.methods
-      //   .votes(accountds[0], ballotId)
-      //   .call();
       ballots.push({...ballot, hasVoted});
     }
-    setBallots(ballots)
+    setBallots(ballots);
   }
 
   async function createBallot(e) {
@@ -86,7 +74,7 @@ function App() {
       .createBallot(name, choices, duration)
       .send({from: accounts[0]});
     await updateBallots();
-  }
+  };
 
   async function addVoters(e) {
     e.preventDefault();
@@ -94,9 +82,7 @@ function App() {
     await contract.methods
       .addVoters(voters)
       .send({from: accounts[0]});
-  }
-
-  
+  };
 
   async function vote(e, ballotId) {
     e.preventDefault();
@@ -106,68 +92,64 @@ function App() {
       .vote(ballotId, choiceId)
       .send({from: accounts[0]});
     await updateBallots();
-  }
+  };
 
   function isFinished(ballot) {
-    const now = (new Date()).getTime(); 
-    const ballotEnd = (new Date(parseInt(ballot.end) * 1000)).getTime();
+    const now = (new Date()).getTime();
+    const ballotEnd =  (new Date(parseInt(ballot.end) * 1000)).getTime();
     return (ballotEnd - now) > 0 ? false : true;
   }
-
 
   if (!isReady()) {
     return <div>Loading...</div>;
   }
 
-
   return (
     <div className="container">
       <h1 className="text-center">Voting</h1>
 
-      {/* Conditional Rendering based on current address */}
-      {accounts[0].toLowerCase() === admin.toLowerCase(
-
-      ) ? (
-      <>
-      <div className="row">
-        <div className="col-sm-12">
-          <h2>Create ballot</h2>
-          <form onSubmit={e => createBallot(e)}>
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input type="text" className="form-control" id="name" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="choices">Choices</label>
-              <input type="text" className="form-control" id="choices" />
-            </div>
-            <div className="form-group">
-              <label htmlFor="duration">Duration (s)</label>
-              <input type="text" className="form-control" id="duration" />
-            </div>
-            <button type="submit" className="btn btn-primary">Submit</button>
-          </form>
+      {accounts[0].toLowerCase() === admin.toLowerCase() ? (
+        <>
+        <div className="row">
+          <div className="col-sm-12">
+            <h2>Create ballot</h2>
+            <form onSubmit={e => createBallot(e)}>
+              <div className="form-group">
+                <label htmlFor="name">Name</label>
+                <input type="text" className="form-control" id="name" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="choices">Choices</label>
+                <input type="text" className="form-control" id="choices" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="duration">Duration (s)</label>
+                <input type="text" className="form-control" id="duration" />
+              </div>
+              <button type="submit" className="btn btn-primary">Submit</button>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <hr/>
+        <hr/>
 
-      <div className="row">
-        <div className="col-sm-12">
-          <h2>Add voters</h2>
-          <form onSubmit={e => addVoters(e)}>
-            <div className="form-group">
-              <label htmlFor="voters">Voters</label>
-              <input type="text" className="form-control" id="voters" />
-            </div>
-            <button type="submit" className="btn btn-primary">Submit</button>
-          </form>
+        <div className="row">
+          <div className="col-sm-12">
+            <h2>Add voters</h2>
+            <form onSubmit={e => addVoters(e)}>
+              <div className="form-group">
+                <label htmlFor="voters">Voters</label>
+                <input type="text" className="form-control" id="voters" />
+              </div>
+              <button type="submit" className="btn btn-primary">Submit</button>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <hr/>
-      </>
+        <hr/>
+        </>
       ) : null}
+
       <div className="row">
         <div className="col-sm-12">
           <h2>Votes</h2>
@@ -190,41 +172,39 @@ function App() {
                     <ul>
                     {ballot.choices.map(choice => (
                       <li key={choice.id}>
-                        id: {choice.id}
-                        name: {choice.name}
+                        id: {choice.id}, 
+                        name: {choice.name}, 
                         votes: {choice.votes}
                       </li>
                     ))}
                     </ul>
                   </td>
                   <td>
-                     {/* Do a check on if user voted or not */}
-                    {isFinished(ballot) ? 'Vote Finished' : (
-                      ballot.hasVoted ? 'You already voted' : (
-                    <form onSubmit={e => vote(e, ballot.id)}>
-                      <div className="form-group">
-                        <label htmlFor="choice">Choice</label>
-                        <select id="choice" className="form-control">
-                          {ballot.choices.map(choice => (
-                            <option 
-                              key={choice.id}
-                              value={choice.id}
-                            >
-                              {choice.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                      >
-                      Submit      
-                      </button>
-                    </form>
+                    {isFinished(ballot) ? 'Vote finished' : (
+                      ballot.hasVoted ? 'You already voted' : ( 
+                      <form onSubmit={e => vote(e, ballot.id)}>
+                        <div className="form-group">
+                          <label htmlFor="choice">Choice</label>
+                          <select className="form-control" id="choice">
+                            {ballot.choices.map(choice => (
+                              <option 
+                                key={choice.id} 
+                                value={choice.id}>
+                                {choice.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <button 
+                          type="submit" 
+                          className="btn btn-primary">
+                          Submit
+                        </button>
+                      </form>
                     ))}
                   </td>
-                  <td>{(new Date(parseInt(ballot.end) * 1000).toLocaleString())}
+                  <td>
+                    {(new Date(parseInt(ballot.end) * 1000)).toLocaleString()}
                   </td>
                 </tr>
               ))}

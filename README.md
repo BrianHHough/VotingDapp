@@ -35,7 +35,7 @@ compilers: {
 
 ## Run ganache-cli to get your local blockchain running
 
-`ganache-cli`
+`npx ganache-cli`
 
 ## Migrat your contracts in another terminal to your local blockchain ganache instance
 
